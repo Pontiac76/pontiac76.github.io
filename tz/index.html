@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Time Zone Converter</title>
+  
+  <!-- React and ReactDOM -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel for JSX -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: #1e40af;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    h2 {
+      color: #1e40af;
+      margin-bottom: 20px;
+    }
+    
+    .cities-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    
+    .city-cell {
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 200px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      flex-grow: 0;
+      flex-shrink: 0;
+    }
+    
+    .city-cell.full-width {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      text-align: left;
+    }
+    
+    .city-cell.full-width .city-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .city-cell.full-width .city-name {
+      margin-bottom: 0;
+    }
+    
+    .city-cell.full-width .region {
+      margin-bottom: 0;
+      margin-left: 5px;
+    }
+    
+    .city-cell.full-width hr {
+      display: none;
+    }
+    
+    .city-cell.full-width .time-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .city-cell:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .city-cell.full-width:hover {
+      transform: translateY(-2px);
+    }
+    
+    .city-name {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    
+    .city-cell hr {
+      border: none;
+      height: 2px;
+      background-color: #3b82f6;
+      margin: 8px 0;
+    }
+    
+    .region {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .time {
+      font-size: 20px;
+      font-family: monospace;
+      margin-bottom: 4px;
+    }
+    
+    .date {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    
+    .panel {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+    
+    .settings-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .option-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #3b82f6;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+    
+    .city-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .city-button {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+    
+    .city-button.selected {
+      background-color: #3b82f6;
+      color: white;
+    }
+    
+    .city-button.unselected {
+      background-color: #e5e7eb;
+      color: #4b5563;
+    }
+    
+    .converter-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-end;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .inline-form-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    
+    .inline-form-group label {
+      margin-bottom: 0;
+      margin-right: 5px;
+      white-space: nowrap;
+    }
+    
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #4b5563;
+    }
+    
+    select, input {
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    .converter-result {
+      flex-basis: 100%;
+      padding: 15px;
+      background-color: #f3f4f6;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    
+    .custom-tz-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .custom-tz-form input {
+      flex-grow: 1;
+    }
+    
+    .custom-tz-form button {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    
+    .custom-tz-form button:hover {
+      background-color: #2563eb;
+    }
+    
+    footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 40px;
+    }
+    
+    .region-header {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #4b5563;
+    }
+    
+    .save-settings-btn {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+      transition: background-color 0.2s;
+    }
+    
+    .save-settings-btn:hover {
+      background-color: #2563eb;
+    }
+    
+    .storage-status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const TimeZoneConverter = () => {
+      const { useState, useEffect } = React;
+      
+      // Default cities list
+      const defaultCities = [
+        { name: "New York", timezone: "America/New_York", region: "Eastern US" },
+        { name: "Chicago", timezone: "America/Chicago", region: "Central US" },
+        { name: "Denver", timezone: "America/Denver", region: "Mountain US" },
+        { name: "Los Angeles", timezone: "America/Los_Angeles", region: "Pacific US" },
+        { name: "Toronto", timezone: "America/Toronto", region: "Eastern Canada" },
+        { name: "London", timezone: "Europe/London", region: "UK" },
+        { name: "Paris", timezone: "Europe/Paris", region: "Western Europe" },
+        { name: "Berlin", timezone: "Europe/Berlin", region: "Central Europe" },
+        { name: "Warsaw", timezone: "Europe/Warsaw", region: "Poland" },
+        { name: "Jerusalem", timezone: "Asia/Jerusalem", region: "Israel" },
+        { name: "Dubai", timezone: "Asia/Dubai", region: "UAE" },
+        { name: "Mumbai", timezone: "Asia/Kolkata", region: "India" },
+        { name: "Tokyo", timezone: "Asia/Tokyo", region: "Japan" },
+        { name: "Sydney", timezone: "Australia/Sydney", region: "Australia" }
+      ];
+      
+      // Default selected cities
+      const defaultSelectedCities = [
+        "New York", "Chicago", "Los Angeles", "London", "Toronto", "Berlin"
+      ];
+      
+      // Check if localStorage is available
+      const isLocalStorageAvailable = () => {
+        try {
+          const test = 'test';
+          localStorage.setItem(test, test);
+          localStorage.removeItem(test);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      };
+      
+      // Storage availability state
+      const [storageAvailable, setStorageAvailable] = useState(false);
+      
+      // Check storage on component mount
+      useEffect(() => {
+        setStorageAvailable(isLocalStorageAvailable());
+      }, []);
+      
+      // Load cities from localStorage or use defaults
+      const loadCities = () => {
+        if (!isLocalStorageAvailable()) return defaultCities;
+        
+        try {
+          const savedCities = localStorage.getItem('timezone-cities');
+          return savedCities ? JSON.parse(savedCities) : defaultCities;
+        } catch (e) {
+          console.error("Error loading cities from storage:", e);
+          return defaultCities;
+        }
+      };
+      
+      // Load selected cities from localStorage or use defaults
+      const loadSelectedCities = () => {
+        if (!isLocalStorageAvailable()) return defaultSelectedCities;
+        
+        try {
+          const savedSelected = localStorage.getItem('timezone-selected');
+          return savedSelected ? 
+            JSON.parse(savedSelected) : defaultSelectedCities;
+        } catch (e) {
+          console.error("Error loading selected cities from storage:", e);
+          return defaultSelectedCities;
+        }
+      };
+      
+      // Load display preferences
+      const loadFullWidthPreference = () => {
+        if (!isLocalStorageAvailable()) return false;
+        
+        try {
+          const savedPref = localStorage.getItem('timezone-fullwidth');
+          return savedPref ? JSON.parse(savedPref) : false;
+        } catch (e) {
+          return false;
+        }
+      };
+
+      // State management
+      const [cities, setCities] = useState(loadCities());
+      const [currentTimes, setCurrentTimes] = useState([]);
+      const [selectedSourceCity, setSelectedSourceCity] = useState("New York");
+      const [selectedTargetCity, setSelectedTargetCity] = useState("Berlin");
+      const [inputTime, setInputTime] = useState("10:00");
+      const [inputAmPm, setInputAmPm] = useState("PM");
+      const [convertedTime, setConvertedTime] = useState("");
+      const [selectedCities, setSelectedCities] = useState(loadSelectedCities());
+      const [useFullWidth, setUseFullWidth] = useState(loadFullWidthPreference());
+      const [newCityName, setNewCityName] = useState("");
+      const [newCityTimezone, setNewCityTimezone] = useState("");
+      const [newCityRegion, setNewCityRegion] = useState("");
+      const [saveStatus, setSaveStatus] = useState("");
+
+      // Function to format a date object into a time string with AM/PM
+      const formatTimeAmPm = (date) => {
+        let hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+        return `${hours}:${minutesStr} ${ampm}`;
+      };
+
+      // Function to format a date object to show date and weekday
+      const formatDate = (date) => {
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
+      };
+
+      // Update times every second
+      useEffect(() => {
+        const updateTimes = () => {
+          const now = new Date();
+          
+          const times = cities.map(city => {
+            try {
+              const cityTime = new Date(now.toLocaleString('en-US', { timeZone: city.timezone }));
+              return {
+                ...city,
+                time: formatTimeAmPm(cityTime),
+                date: formatDate(cityTime),
+                timestamp: cityTime.getTime()
+              };
+            } catch (e) {
+              console.error(`Error with timezone ${city.timezone}:`, e);
+              return {
+                ...city,
+                time: "Error",
+                date: "Unknown",
+                timestamp: 0
+              };
+            }
+          });
+          
+          setCurrentTimes(times);
+        };
+        
+        updateTimes();
+        const intervalId = setInterval(updateTimes, 1000);
+        
+        return () => clearInterval(intervalId);
+      }, [cities]);
+
+      // Save settings to localStorage
+      const saveSettings = () => {
+        if (!isLocalStorageAvailable()) {
+          setSaveStatus("Local storage not available in this browser environment.");
+          return;
+        }
+        
+        try {
+          localStorage.setItem('timezone-cities', JSON.stringify(cities));
+          localStorage.setItem('timezone-selected', JSON.stringify(selectedCities));
+          localStorage.setItem('timezone-fullwidth', JSON.stringify(useFullWidth));
+          setSaveStatus('Settings saved successfully! They will be remembered next time you visit.');
+          
+          // Clear status message after 3 seconds
+          setTimeout(() => setSaveStatus(''), 3000);
+        } catch (e) {
+          console.error("Error saving settings:", e);
+          setSaveStatus('Error saving settings. Please make sure cookies are enabled.');
+        }
+      };
+
+      // Function to handle the time conversion
+      const convertTime = () => {
+        // Find the source and target cities
+        const sourceCity = cities.find(city => city.name === selectedSourceCity);
+        const targetCity = cities.find(city => city.name === selectedTargetCity);
+        
+        if (!sourceCity || !targetCity) {
+          setConvertedTime("City not found");
+          return;
+        }
+        
+        try {
+          // Create a new date object based on the current date
+          const now = new Date();
+          
+          // Parse the input time
+          let [hours, minutes] = inputTime.split(':').map(Number);
+          
+          // Adjust for AM/PM
+          if (inputAmPm === "PM" && hours < 12) {
+            hours += 12;
+          } else if (inputAmPm === "AM" && hours === 12) {
+            hours = 0;
+          }
+          
+          // Set the time to the date
+          now.setHours(hours, minutes, 0, 0);
+          
+          // Get the timezone offset for the source city
+          const sourceDate = new Date(now.toLocaleString('en-US', { timeZone: sourceCity.timezone }));
+          const targetDate = new Date(now.toLocaleString('en-US', { timeZone: targetCity.timezone }));
+          
+          // Calculate the difference in time
+          const offsetDiff = (sourceDate.getTime() - targetDate.getTime());
+          
+          // Apply the offset to get the target time
+          const targetTime = new Date(now.getTime() - offsetDiff);
+          
+          // Format and set the converted time
+          setConvertedTime(formatTimeAmPm(targetTime) + " on " + formatDate(targetTime));
+        } catch (e) {
+          console.error("Error converting time:", e);
+          setConvertedTime("Error converting time");
+        }
+      };
+      
+      // Effect to run conversion when inputs change
+      useEffect(() => {
+        convertTime();
+      }, [selectedSourceCity, selectedTargetCity, inputTime, inputAmPm]);
+
+      // Toggle city selection
+      const toggleCitySelection = (cityName) => {
+        setSelectedCities(prev => 
+          prev.includes(cityName) 
+            ? prev.filter(name => name !== cityName)
+            : [...prev, cityName]
+        );
+      };
+      
+      // Add a custom city
+      const addCustomCity = () => {
+        if (!newCityName || !newCityTimezone) {
+          setSaveStatus('Please enter a name and timezone');
+          setTimeout(() => setSaveStatus(''), 3000);
+          return;
+        }
+        
+        // Check if timezone is valid
+        try {
+          // Test if timezone is valid by trying to use it
+          new Date().toLocaleString('en-US', { timeZone: newCityTimezone });
+          
+          // Add the new city
+          const newCity = {
+            name: newCityName,
+            timezone: newCityTimezone,
+            region: newCityRegion || 'Custom'
+          };
+          
+          setCities(prev => [...prev, newCity]);
+          setSelectedCities(prev => [...prev, newCityName]);
+          
+          // Clear the form
+          setNewCityName('');
+          setNewCityTimezone('');
+          setNewCityRegion('');
+          setSaveStatus('City added successfully! Click "Save Settings" to make it permanent.');
+          setTimeout(() => setSaveStatus(''), 3000);
+        } catch (e) {
+          setSaveStatus('Invalid timezone. Please enter a valid IANA timezone like "America/New_York"');
+          setTimeout(() => setSaveStatus(''), 3000);
+        }
+      };
+
+      // Group cities by region
+      const groupedCities = cities.reduce((acc, city) => {
+        if (!acc[city.region]) {
+          acc[city.region] = [];
+        }
+        acc[city.region].push(city);
+        return acc;
+      }, {});
+      
+      // Filter and sort cities for display
+      const displayCities = currentTimes
+        .filter(city => selectedCities.includes(city.name))
+        .sort((a, b) => a.timestamp - b.timestamp);
+
+      return (
+        <div className="container">
+          <h1>World Time Zone Converter</h1>
+          
+          {/* Time conversion calculator - moved to top as requested */}
+          <div className="panel">
+            <h2>Time Conversion Calculator</h2>
+            
+            <div className="converter-form">
+              <div className="inline-form-group">
+                <label>Source Time:</label>
+                <select
+                  value={selectedSourceCity}
+                  onChange={(e) => setSelectedSourceCity(e.target.value)}
+                >
+                  {cities.map(city => (
+                    <option key={city.name} value={city.name}>{city.name}</option>
+                  ))}
+                </select>
+                
+                <input
+                  type="time"
+                  value={inputTime}
+                  onChange={(e) => setInputTime(e.target.value)}
+                  style={{ width: '100px' }}
+                />
+                
+                <select
+                  value={inputAmPm}
+                  onChange={(e) => setInputAmPm(e.target.value)}
+                  style={{ width: '80px' }}
+                >
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
+              
+              <div className="inline-form-group">
+                <label>Target Time:</label>
+                <select
+                  value={selectedTargetCity}
+                  onChange={(e) => setSelectedTargetCity(e.target.value)}
+                >
+                  {cities.map(city => (
+                    <option key={city.name} value={city.name}>{city.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="converter-result">
+                <strong>Converted Time:</strong> {convertedTime}
+              </div>
+            </div>
+          </div>
+          
+          {/* Current times section */}
+          <h2>Current Times</h2>
+          <div className="cities-container">
+            {displayCities.map(city => (
+              <div 
+                key={city.name} 
+                className={`city-cell ${useFullWidth ? 'full-width' : ''}`}
+              >
+                {useFullWidth ? (
+                  <>
+                    <div className="city-info">
+                      <div className="city-name">{city.name}</div>
+                      <div className="region">({city.region})</div>
+                    </div>
+                    <div className="time-info">
+                      <div className="time">{city.time}</div>
+                      <div className="date">{city.date}</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="city-name">{city.name}</div>
+                    <hr />
+                    <div className="region">{city.region}</div>
+                    <div className="time">{city.time}</div>
+                    <div className="date">{city.date}</div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {/* Settings section */}
+          <div className="panel">
+            <h2>Settings</h2>
+            
+            <div className="settings-options">
+              <div className="option-toggle">
+                <label className="toggle-switch">
+                  <input 
+                    type="checkbox" 
+                    checked={useFullWidth}
+                    onChange={() => setUseFullWidth(!useFullWidth)}
+                  />
+                  <span className="toggle-slider"></span>
+                </label>
+                <span>Use full width cells</span>
+              </div>
+            </div>
+            
+            <h3>Customize Displayed Cities</h3>
+            
+            {Object.entries(groupedCities).map(([region, citiesInRegion]) => (
+              <div key={region}>
+                <div className="region-header">{region}</div>
+                <div className="city-buttons">
+                  {citiesInRegion.map(city => (
+                    <button
+                      key={city.name}
+                      onClick={() => toggleCitySelection(city.name)}
+                      className={`city-button ${
+                        selectedCities.includes(city.name)
+                          ? 'selected'
+                          : 'unselected'
+                      }`}
+                    >
+                      {city.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            
+            <h3>Add Custom Timezone</h3>
+            <div className="custom-tz-form">
+              <input
+                type="text"
+                placeholder="City Name"
+                value={newCityName}
+                onChange={(e) => setNewCityName(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Timezone (e.g. America/Chicago)"
+                value={newCityTimezone}
+                onChange={(e) => setNewCityTimezone(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Region (optional)"
+                value={newCityRegion}
+                onChange={(e) => setNewCityRegion(e.target.value)}
+              />
+              <button onClick={addCustomCity}>Add City</button>
+            </div>
+            
+            <button 
+              className="save-settings-btn" 
+              onClick={saveSettings}
+              disabled={!storageAvailable}
+            >
+              Save Settings to Browser
+            </button>
+            
+            {!storageAvailable && (
+              <div className="storage-status">
+                Note: Local storage is not available in your current environment. 
+                Settings can't be saved, but the tool will work normally when hosted on GitHub Pages.
+              </div>
+            )}
+            
+            {saveStatus && (
+              <div className="storage-status">
+                {saveStatus}
+              </div>
+            )}
+          </div>
+          
+          <footer>
+            <p>This tool automatically handles Daylight Saving Time adjustments for all locations.</p>
+            <p>Your settings are saved in your browser and will be remembered when you return.</p>
+            <p>© 2025 Time Zone Converter | All times updated in real-time</p>
+          </footer>
+        </div>
+      );
+    };
+
+    // Render the app
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<TimeZoneConverter />);
+  </script>
+</body>
+</html>
