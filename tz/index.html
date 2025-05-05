@@ -194,30 +194,62 @@
       transform: translateX(26px);
     }
     
-    .city-buttons {
+    /* Improved checkbox grid styling */
+    .city-checkbox-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
     
-    .city-button {
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.2s;
+    .city-checkbox-item {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px;
+      width: 180px;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s, transform 0.2s;
     }
     
-    .city-button.selected {
-      background-color: #3b82f6;
-      color: white;
+    .city-checkbox-item:hover {
+      background-color: #f9fafb;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     
-    .city-button.unselected {
-      background-color: #e5e7eb;
-      color: #4b5563;
+    .city-checkbox-item.selected {
+      border-color: #3b82f6;
+      background-color: #eff6ff;
+    }
+    
+    .city-checkbox {
+      margin-right: 10px;
+    }
+    
+    .city-checkbox-label {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .city-checkbox-name {
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    .city-checkbox-timezone {
+      font-size: 11px;
+      color: #6b7280;
+    }
+    
+    .checkbox-search {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 16px;
     }
     
     .converter-form {
@@ -300,13 +332,6 @@
       margin-top: 40px;
     }
     
-    .region-header {
-      margin-top: 20px;
-      margin-bottom: 10px;
-      font-weight: 600;
-      color: #4b5563;
-    }
-    
     .save-settings-btn {
       background-color: #3b82f6;
       color: white;
@@ -344,15 +369,26 @@
         { name: "Denver", timezone: "America/Denver", region: "Mountain US" },
         { name: "Los Angeles", timezone: "America/Los_Angeles", region: "Pacific US" },
         { name: "Toronto", timezone: "America/Toronto", region: "Eastern Canada" },
+        { name: "Vancouver", timezone: "America/Vancouver", region: "Western Canada" },
+        { name: "Mexico City", timezone: "America/Mexico_City", region: "Central America" },
+        { name: "São Paulo", timezone: "America/Sao_Paulo", region: "South America" },
         { name: "London", timezone: "Europe/London", region: "UK" },
         { name: "Paris", timezone: "Europe/Paris", region: "Western Europe" },
         { name: "Berlin", timezone: "Europe/Berlin", region: "Central Europe" },
-        { name: "Warsaw", timezone: "Europe/Warsaw", region: "Poland" },
-        { name: "Jerusalem", timezone: "Asia/Jerusalem", region: "Israel" },
-        { name: "Dubai", timezone: "Asia/Dubai", region: "UAE" },
+        { name: "Rome", timezone: "Europe/Rome", region: "Southern Europe" },
+        { name: "Warsaw", timezone: "Europe/Warsaw", region: "Eastern Europe" },
+        { name: "Moscow", timezone: "Europe/Moscow", region: "Russia" },
+        { name: "Jerusalem", timezone: "Asia/Jerusalem", region: "Middle East" },
+        { name: "Dubai", timezone: "Asia/Dubai", region: "Middle East" },
+        { name: "New Delhi", timezone: "Asia/Kolkata", region: "India" },
         { name: "Mumbai", timezone: "Asia/Kolkata", region: "India" },
+        { name: "Bangkok", timezone: "Asia/Bangkok", region: "Southeast Asia" },
+        { name: "Singapore", timezone: "Asia/Singapore", region: "Southeast Asia" },
+        { name: "Hong Kong", timezone: "Asia/Hong_Kong", region: "East Asia" },
+        { name: "Shanghai", timezone: "Asia/Shanghai", region: "East Asia" },
         { name: "Tokyo", timezone: "Asia/Tokyo", region: "Japan" },
-        { name: "Sydney", timezone: "Australia/Sydney", region: "Australia" }
+        { name: "Sydney", timezone: "Australia/Sydney", region: "Australia" },
+        { name: "Auckland", timezone: "Pacific/Auckland", region: "New Zealand" }
       ];
       
       // Default selected cities
@@ -433,6 +469,7 @@
       const [newCityTimezone, setNewCityTimezone] = useState("");
       const [newCityRegion, setNewCityRegion] = useState("");
       const [saveStatus, setSaveStatus] = useState("");
+      const [searchTerm, setSearchTerm] = useState("");
 
       // Function to format a date object into a time string with AM/PM
       const formatTimeAmPm = (date) => {
@@ -600,15 +637,12 @@
           setTimeout(() => setSaveStatus(''), 3000);
         }
       };
-
-      // Group cities by region
-      const groupedCities = cities.reduce((acc, city) => {
-        if (!acc[city.region]) {
-          acc[city.region] = [];
-        }
-        acc[city.region].push(city);
-        return acc;
-      }, {});
+      
+      // Filter cities based on search term
+      const filteredCities = cities.filter(city => 
+        city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        city.timezone.toLowerCase().includes(searchTerm.toLowerCase())
+      );
       
       // Filter and sort cities for display
       const displayCities = currentTimes
@@ -722,26 +756,36 @@
             
             <h3>Customize Displayed Cities</h3>
             
-            {Object.entries(groupedCities).map(([region, citiesInRegion]) => (
-              <div key={region}>
-                <div className="region-header">{region}</div>
-                <div className="city-buttons">
-                  {citiesInRegion.map(city => (
-                    <button
-                      key={city.name}
-                      onClick={() => toggleCitySelection(city.name)}
-                      className={`city-button ${
-                        selectedCities.includes(city.name)
-                          ? 'selected'
-                          : 'unselected'
-                      }`}
-                    >
-                      {city.name}
-                    </button>
-                  ))}
+            {/* City search filter */}
+            <input
+              type="text"
+              className="checkbox-search"
+              placeholder="Search cities..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            
+            {/* City checkbox grid */}
+            <div className="city-checkbox-grid">
+              {filteredCities.map(city => (
+                <div 
+                  key={city.name} 
+                  className={`city-checkbox-item ${selectedCities.includes(city.name) ? 'selected' : ''}`}
+                  onClick={() => toggleCitySelection(city.name)}
+                >
+                  <input
+                    type="checkbox"
+                    className="city-checkbox"
+                    checked={selectedCities.includes(city.name)}
+                    onChange={() => {}} // Handled by the div click
+                  />
+                  <div className="city-checkbox-label">
+                    <span className="city-checkbox-name">{city.name}</span>
+                    <span className="city-checkbox-timezone">{city.timezone}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
             
             <h3>Add Custom Timezone</h3>
             <div className="custom-tz-form">
