@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+
+    <title>Home Brew Organization | My Home Tech Projects</title>
+
+    <link rel="preload" href="https://pontiac76.github.io/fonts/FiraCode-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="https://pontiac76.github.io/fonts/FiraCode-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://pontiac76.github.io/css/style.css?h=fd30ebca55fd38ab02dd">
+    <script src="https://pontiac76.github.io/js/auto-close-popover-on-resize.js?h=db2a81e55d646d64083d" defer></script>
+    <script src="https://pontiac76.github.io/js/copy-code-to-clipboard.js?h=6eac0704095d356d30b8" defer></script>
+    <script src="https://pontiac76.github.io/js/theme-switcher.js?h=ffa88830e9f14f3efe82" defer></script>
+
+    <link rel="canonical" href="https://pontiac76.github.io/homelab/HomeNetworkOrganization/organization/">
+    
+    <meta name="description" content="Nuts, Bolts and Duct Tape">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#211f1a">
+    <meta name="color-scheme" content="dark">
+
+    <meta property="og:title" content="Home Brew Organization">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://pontiac76.github.io/homelab/HomeNetworkOrganization/organization/">
+    <meta property="og:description" content="Nuts, Bolts and Duct Tape">
+    <meta property="og:site_name" content="My Home Tech Projects">
+    <meta property="og:updated_time" content="2025-10-08T04:41:21.612195193-04:00">
+    <meta property="article:published_time" content="2025-09-01T00:00:00+00:00">
+</head>
+
+<body class="layout-center">
+    <header class="header">
+        <div class="header-container">
+            <span class="header-logo-container">
+                <a href="https://pontiac76.github.io">
+                    <span class="logo">My Home Tech Projects</span>
+                </a>
+            </span>
+        </div>
+        <nav class="main-menu" aria-label="Main Menu">
+            <a class="skip-to-content" href="#main">Skip to main content</a>
+            <button class="main-menu-dropdown-button" popovertarget="nav-menu">Menu</button>
+            <ul id="nav-menu" class="main-menu-items" aria-label="Site Navigation" popover>
+                <li><a href="https://pontiac76.github.io/">Home</a></li>
+                <li><a href="https://pontiac76.github.io/homelab/">HomeLab</a></li>
+                <li><a href="https://pontiac76.github.io/retro/">Retro</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="page-layout">
+        
+        <main id="main">
+            <article class="post content">
+            <header>
+                <h1 class="post-title">
+                    <a href="https://pontiac76.github.io/homelab/HomeNetworkOrganization/organization/">Home Brew Organization</a>
+                </h1>
+                <ul class="post-meta">
+                    <li title="Published on 2025-09-01"><time datetime="2025-09-01">2025.09.01</time></li>
+                    <li role="separator" aria-hidden="true">::</li>
+                    <li title="748 words"><time datetime="PT4M">4 min</time> read</li>
+                </ul>
+            </header>
+
+<h1 id="what-is-involved">What is involved</h1>
+<p>This is not for the feint of heart.  There's a lot of "moving" parts here, each doing something really custom.  So let's start with the smallest and work our way outwards to the bigger pictures.</p>
+<p>The components needed are:</p>
+<ul>
+<li>DHCP Server (Dynamic Host Control Protocol)</li>
+<li>DNS SErver (Dynamic Name Service/Server)</li>
+<li>An IPAM (Internet Protocol Address Manager)</li>
+<li>Ansible Semaphore</li>
+</ul>
+<h1 id="the-gears-of-the-network">The gears of the network</h1>
+<h2 id="dhcp">DHCP</h2>
+<p>DHCP is a protocol every home network LAN has, unless you're really special.  Even your cell phone when you get it to go into Access Point mode has a DHCP service, but it's super focused, and only allows a few devices on.</p>
+<p>On your standard home network, depending on the router, the DHCP service will allow typically 50 to 100 devices.  If you've got a phone that uses the "Random MAC address" setting, every single time your phone disconnects and reconnects to your network, your DHCP server is going to give your phone a new IP address.  This becomes a serious pain for small networks, especially of the DHCP service is configured to hold onto IP addresses for weeks at a time.</p>
+<p>What happens is your device will broadcast out to the network and ask for the attention of a DHCP server.  The DHCP server will respond back.  The device will ask for an IP address, preferred to what it had before (If that random MAC address is off), and the DHCP server will either grant it or deny the request, or just give another IP address.  The device will take that address and roll with it.  (Other things happen as well, but that's beyond this)</p>
+<h2 id="dns">DNS</h2>
+<p>This is a CRITICAL function for any internet capable device.  DNS is doing the name lookups for every thing you go to.  Not just for a browser, but any device that needs to get out to the internet or onto the network is going to have to ask for a name, unless the software specifically looks for an IP address itself (Which is hard to come by now-a-days).</p>
+<p>So when you look up google.com, you'll connect to either your home-brew DNS server sitting in your router, or your DNS server you built (IE: PiHole, or your own creation) or you're going out to the internet becaue your router told your device that's where it needs to look things up from.</p>
+<h2 id="phpipam">phpIPAM</h2>
+<p>This is the tool that I'm using to manage my network IP provisions.  I manually decide who lives and dies on my network based on the devices MAC address.  Any device that comes on, I must know about it.  If something comes onto my network through a hacked access point, my DHCP server will put them in a dead zone where they don't get out to the internet, and they don't get a DNS.  They get an IP "just in case" I have to use the device to get to phpIPAM, but, that's only happened twice because I was too lazy to go to a PC to manage things.</p>
+<p>There are a bunch of things I tweak in phpIPAM to better run my network, and setup certain criteria on how the devices are supposed to behave.</p>
+<p>phpIPAM is not a DHCP or DNS service.  It's a documentation tool for DHCP and DNS.  In the way I've implemented my setup, any change that happens in the IPAM, that information is generated and distributed to the DHCP and DNS servers.  Both DHCP and DNS servers do not "call home", but they could if I so desired, and all it'd take is making a simple HTTP request to Semaphore.</p>
+<h2 id="semaphore-ansible">Semaphore (Ansible)</h2>
+<p>Semaphore is a web front end to Ansible.  Ansible is an industry staple (But not the only staple in the industry) to managing how a set of machines should be configured.  You can think of Ansible as being a cook that follows a food recipe to the letter.  In both cooking and in what Ansible does, you're given step by step instructions on how to perform things to get to the correct end result or state.  So Ansible is just a recipe book that Semaphore executes.</p>
+<p>There's a few things Semaphore does that makes providing Ansible certain bits of information, like, what devices it needs to talk to, and all that, but, it's basically a recipe book.  In Ansible terms, these are known as inventory files, playbook files, and plays.  Semaphore also allows you to execute actions automatically by an API.</p>
+
+        </article>
+        </main>
+        
+            <aside class="sidebar">
+  
+    
+    
+    
+
+    <h2>Home Network Organization</h2>
+    
+    
+      
+      
+        
+          
+          
+          <li><a href="https:&#x2F;&#x2F;pontiac76.github.io&#x2F;homelab&#x2F;HomeNetworkOrganization&#x2F;organization&#x2F;">2025-09-01 – Home Brew Organization</a></li>
+        
+      
+      </ul>
+    
+  
+</aside>
+
+        
+    </div>
+    <footer class="footer">
+        <p class="copyright">
+            <span>© <time>2025</time></span>
+            <span>Powered by <a href="https://www.getzola.org">Zola</a></span>
+            <span>Theme by <a href="https://eyalkalderon.com">ebkalderon</a></span>
+        </p>
+    </footer>
+</body>
+
+</html>
